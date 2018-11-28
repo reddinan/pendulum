@@ -1,0 +1,40 @@
+{
+    "name": "bytepath/flashbang",
+    "description": "A library to send flash notifications to the user of your web app",
+    "type": "library",
+    "require": {
+        "illuminate/support": "^5.5",
+        "mockery/mockery": "^1.0"
+    },
+    "require-dev": {
+    	"orchestra/testbench": "^3.6",
+        "phpunit/phpunit": "^7.0"
+    },	
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "Bytepath\\Pendulum\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bytepath\\Pendulum\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Andrew Reddin",
+            "email": "andrew@bytepath.ca"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Bytepath\\Pendulum\\PendulumServiceProvider"
+            ],
+            "aliases": {
+                "FlashBang": "Bytepath\\Pendulum\\Facades\\Pendulum"
+            }
+        }
+    }
+}
