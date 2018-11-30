@@ -6,6 +6,15 @@ use Illuminate\Support\Collection;
 
 interface ImporterContract
 {
+    // Successfully imported item
+    const IMPORT_SUCCESS = 1;
+
+    // Failed to import item
+    const IMPORT_FAILED = -1;
+
+    // Item was already imported
+    const ALREADY_IMPORTED = 0;
+
     /**
      * Import an item into the system
      * @param PendulumContract $item The item you want to import into the system

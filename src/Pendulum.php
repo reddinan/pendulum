@@ -57,6 +57,12 @@ abstract class Pendulum extends Command
     protected $showFailures = true;
 
     /**
+     * The number of items we have processed
+     * @var int
+     */
+    protected $count = 0;
+
+    /**
      * Execute the console command.
      *
      * @return mixed
@@ -66,13 +72,13 @@ abstract class Pendulum extends Command
         // Process any options passed in
         $this->processOptions();
 
+        // Retreive the code that will perform the import
         $this->import = $this->getImporter();
-        $this->repository = $this->getRepository();
-
-        $this->info("Running " . (static::class));
 
         try {
-            $orders = $this->repository->getOrdersStartingAt(0, 1, $this->classToClosure([&$this, 'processOrders']));
+            foreach($this->getRepository() as $data){
+                $this->processItem($data);
+            }
         }
         catch(\Exception $e) {
             $this->error($e->getMessage());
@@ -86,49 +92,35 @@ abstract class Pendulum extends Command
 
     /**
      * Process the list of orders
-     * @param $list an array containing a row from the CSV file
+     * @param PendulumContract $item
      */
-    protected function processOrders($list)
+    protected function processItem($item)
     {
-        $count = 0;
-        $list->each(function(PendulumContract $item) use(&$count){
-            $result = $this->import->processItem($item);
-            if($result > 0)
-            {
-                if($this->showSuccess){
-                    $this->info($this->signature . " " . $item->pendulumSuccess());
-                }
+        $this->count++;
+        $result = $this->import->processItem($item);
+        if($result == ImporterContract::IMPORT_SUCCESS)
+        {
+            if($this->showSuccess){
+                $this->info($this->signature . " " . $item->pendulumSuccess());
             }
-            else if($result < 0)
-            {
-                if($this->showFailures){
-                    $this->error($this->signature . " " . $item->pendulumFailed());
-                }
+        }
+        else if($result == ImporterContract::IMPORT_FAILED)
+        {
+            if($this->showFailures){
+                $this->error($this->signature . " " . $item->pendulumFailed());
             }
-            else
-            {
-                if($this->showWarnings){
-                    $this->warn($this->signature . " " . $item->pendulumDuplicate());
-                }
+        }
+        else if($result == ImporterContract::ALREADY_IMPORTED)
+        {
+            if($this->showWarnings){
+                $this->warn($this->signature . " " . $item->pendulumDuplicate());
             }
-        });
-    }
-
-    /**
-     * A small hack to allow us to pass this class as a callback to the repository
-     * @param array $callable
-     * @return \Closure
-     */
-    public function classToClosure(array $callable)
-    {
-        return function () use ($callable) {
-            call_user_func_array($callable, func_get_args());
-        };
+        }
     }
 
     /**
      * Get the respository class that will handle the data store
-     * @return RepositoryContract
+     * @return \Iterator
      */
     abstract protected function getRepository();
 
