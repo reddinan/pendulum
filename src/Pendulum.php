@@ -6,27 +6,13 @@ use Bytepath\Pendulum\Contracts\PendulumContract;
 use Bytepath\Pendulum\Contracts\RepositoryContract;
 use Illuminate\Console\Command;
 
-abstract class Pendulum extends Command
+class Pendulum
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = '';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = '';
-
     /**
      * The order import class
      * @var ImporterContract
      */
-    protected $import = null;
+    protected $importer = null;
 
     /**
      * The repository that interacts with the data store
@@ -63,11 +49,47 @@ abstract class Pendulum extends Command
     protected $count = 0;
 
     /**
-     * Execute the console command.
+     * Requires you to pass in one or more classes. Read full description
+     * This constructor requires you to pass in objects that implement Bytepath\Pendulum\Contracts\ImporterContract and
+     * Bytepath\Pendulum\Contracts\RepositoryContract. You can pass in one object that implements both of these
+     * contracts, or two different objects each implement one of these contracts. If you pass in two (or more)
+     * objects that both implement the same interface, the last one will be the one that this class will use.
+     *
+     * @param array ...$importerAndRepository one or more classes implementing the interfaces mentioned above
+     */
+    public function __construct(...$importerAndRepository)
+    {
+        //Import the repository and importer that are passed in. This can be one class or multiple
+        $this->setRepositoryAndImporter($importerAndRepository);
+    }
+
+    /**
+     * Sets repository and importer classes. This can be one object or multiple
+     * @param array $importerAndRepository an array containing one or more classes
+     */
+    protected function setRepositoryAndImporter($importerAndRepository)
+    {
+        foreach($importerAndRepository as $theObject){
+            $implements = class_implements($theObject);
+
+            // Check if this class is the importer
+            if(array_key_exists(ImporterContract::class, $implements)){
+                $this->importer = $theObject;
+            }
+
+            // Check if this class is the repository
+            if(array_key_exists(\Iterator::class, $implements)){
+                $this->repository = $theObject;
+            }
+        }
+    }
+
+    /**
+     * Start the import process.
      *
      * @return mixed
      */
-    public function handle()
+    public function import()
     {
         // Process any options passed in
         $this->processOptions();
@@ -86,8 +108,24 @@ abstract class Pendulum extends Command
 
         // Send notification that import has completed
         if($this->shouldNotifyWhenComplete){
-            $this->import->notifyImportComplete();
+            $this->importer->notifyImportComplete();
         }
+    }
+
+    /**
+     * @return RepositoryContract
+     */
+    public function getRepository()
+    {
+        return $this->repository;
+    }
+
+    /**
+     * @return ImporterContract
+     */
+    public function getImporter()
+    {
+        return $this->importer;
     }
 
     /**
@@ -97,7 +135,7 @@ abstract class Pendulum extends Command
     protected function processItem($item)
     {
         $this->count++;
-        $result = $this->import->processItem($item);
+        $result = $this->importer->processItem($item);
         if($result == ImporterContract::IMPORT_SUCCESS)
         {
             if($this->showSuccess){
@@ -117,22 +155,4 @@ abstract class Pendulum extends Command
             }
         }
     }
-
-    /**
-     * Get the respository class that will handle the data store
-     * @return \Iterator
-     */
-    abstract protected function getRepository();
-
-    /**
-     * Get the class that will actually import the data
-     * @return ImporterContract
-     */
-    abstract protected function getImporter();
-
-    /**
-     * Process any options that were provided on the command line
-     * @return mixed
-     */
-    protected function processOptions(){}
 }

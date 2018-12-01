@@ -1,9 +1,11 @@
 <?php
 
-namespace Bytepath\FlashBang\Tests;
+namespace Bytepath\Pendulum\Tests;
 
 use Bytepath\FlashBang\Facades\FlashBang;
 use Bytepath\FlashBang\FlashBangServiceProvider;
+use Bytepath\Pendulum\Pendulum;
+use Bytepath\Pendulum\PendulumServiceProvider;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as DBCollection;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
@@ -17,7 +19,7 @@ class TestCase extends OrchestraTestCase
      */
     protected function getPackageProviders($app)
     {
-        return [FlashBangServiceProvider::class];
+        return [PendulumServiceProvider::class];
     }
     /**
      * Load package alias
@@ -27,7 +29,7 @@ class TestCase extends OrchestraTestCase
     protected function getPackageAliases($app)
     {
         return [
-            'FlashBang' => FlashBang::class,
+            'Pendulum' => Pendulum::class,
         ];
     }
 
