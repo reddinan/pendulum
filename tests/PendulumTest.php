@@ -51,7 +51,36 @@ class PendulumTest extends \Bytepath\Pendulum\Tests\TestCase
         $pendulum->import();
     }
 
+    public function test_pendulumSuccess_is_called_on_the_importable_item_if_successfully_imported()
+    {
+        $this->assertTrue(false);
+    }
 
+    public function test_pendulumSuccess_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
+    {
+        $this->assertTrue(false);
+    }
+
+    public function test_pendulumFailure_is_called_on_the_importable_item_if_import_failed()
+    {
+        $this->assertTrue(false);
+    }
+
+    public function test_pendulumFailure_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
+    {
+        $this->assertTrue(false);
+    }
+
+    public function test_pendulumDuplicate_is_called_on_the_importable_item_if_item_was_a_duplicate()
+    {
+        $this->assertTrue(false);
+    }
+
+    public function test_pendulumDuplicate_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
+    {
+        $this->assertTrue(false);
+    }
+    
     protected function createArrayIterator($array)
     {
         foreach($array as $key => $item) {
