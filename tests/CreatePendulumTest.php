@@ -57,7 +57,7 @@ class CreatePendulumTest extends \Bytepath\Pendulum\Tests\TestCase
 
 class ImplementsBothContracts implements ImporterContract, Iterator
 {
-    public function processItem($item){}
+     public function processItem(&$item){}
      public function current(){}
      public function key(){}
      public function next (){}
@@ -86,10 +86,10 @@ class AlternateIterator implements Iterator
 
 class ImplementsImporter implements ImporterContract
 {
-    public function processItem($item){}
+    public function processItem(&$item){}
 }
 
 class AlternateImporter implements ImporterContract
 {
-    public function processItem($item){}
+    public function processItem(&$item){}
 }

@@ -20,5 +20,5 @@ interface ImporterContract
      * @param PendulumContract $item The item you want to import into the system
      * @return integer 1=success, 0=duplicate, -1=failed
      */
-    public function processItem($item);
+    public function processItem(&$item);
 }

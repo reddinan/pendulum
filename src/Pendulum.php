@@ -2,9 +2,9 @@
 namespace Bytepath\Pendulum;
 
 use Bytepath\Pendulum\Contracts\ImporterContract;
+use Bytepath\Pendulum\Contracts\OutputContract;
 use Bytepath\Pendulum\Contracts\PendulumContract;
 use Bytepath\Pendulum\Contracts\RepositoryContract;
-use Illuminate\Console\Command;
 
 class Pendulum
 {
@@ -19,6 +19,12 @@ class Pendulum
      * @var RepositoryContract
      */
     protected $repository = null;
+
+    /**
+     * The class that will pass messages to the user via writing to a screen or whatever
+     * @var OutputContract
+     */
+    protected $output = null;
 
     /**
      * Set to true to send a notification when completed
@@ -59,6 +65,9 @@ class Pendulum
      */
     public function __construct(...$importerAndRepository)
     {
+        // By default we don't display any output
+        $this->output = new NullOutputWriter();
+
         //Import the repository and importer that are passed in. This can be one class or multiple
         $this->setRepositoryAndImporter($importerAndRepository);
     }
@@ -91,25 +100,17 @@ class Pendulum
      */
     public function import()
     {
-        // Process any options passed in
-        $this->processOptions();
+        // Notify that import has started and open any files or connections that are needed
+        $this->output->importStarted();
 
-        // Retreive the code that will perform the import
-        $this->import = $this->getImporter();
-
-        try {
-            foreach($this->getRepository() as $data){
-                $this->processItem($data);
-            }
-        }
-        catch(\Exception $e) {
-            $this->error($e->getMessage());
+        // Process each data item one by one
+        foreach($this->getRepository() as $data){
+            $this->processItem($data);
         }
 
-        // Send notification that import has completed
-        if($this->shouldNotifyWhenComplete){
-            $this->importer->notifyImportComplete();
-        }
+        // Notify that import has completed and close any files or connections that are open
+        $this->output->importComplete();
+
     }
 
     /**
@@ -129,6 +130,24 @@ class Pendulum
     }
 
     /**
+     * Get the output writer
+     * @return OutputContract
+     */
+    public function getOutputWriter()
+    {
+        return $this->output;
+    }
+
+    /**
+     * Set the output writer
+     * @param OutputContract $writer
+     */
+    public function setOutputWriter(OutputContract $writer)
+    {
+        $this->output = $writer;
+    }
+
+    /**
      * Process the list of orders
      * @param PendulumContract $item
      */
@@ -136,23 +155,30 @@ class Pendulum
     {
         $this->count++;
         $result = $this->importer->processItem($item);
-        if($result == ImporterContract::IMPORT_SUCCESS)
-        {
-            if($this->showSuccess){
-                $this->info($this->signature . " " . $item->pendulumSuccess());
-            }
+        $this->itemProcessed($result, $item);
+    }
+
+    protected function itemProcessed($result, $item)
+    {
+        // Failed is a negative number so we add one to avoid any issues there
+        $result++;
+
+        // The three valid options that can be returned by the import class + 1 because failed is a negative number
+        $options = [
+            (ImporterContract::IMPORT_SUCCESS + 1) => "success",
+            (ImporterContract::IMPORT_FAILED + 1) => "failure",
+            (ImporterContract::ALREADY_IMPORTED + 1) => "duplicate"
+        ];
+
+        // If the imported item implements Bytepath\Pendulum\Contracts\PendulumContract then call the appropriate
+        // method and pass the string it returns to the output writer class.
+        // If the class doesn't implement that method just pass it an empty string
+        $message = "";
+        $method = "pendulum" . ucfirst($options[$result]);
+        if(method_exists($item, $method)){
+            $message = $item->{$method}();
         }
-        else if($result == ImporterContract::IMPORT_FAILED)
-        {
-            if($this->showFailures){
-                $this->error($this->signature . " " . $item->pendulumFailed());
-            }
-        }
-        else if($result == ImporterContract::ALREADY_IMPORTED)
-        {
-            if($this->showWarnings){
-                $this->warn($this->signature . " " . $item->pendulumDuplicate());
-            }
-        }
+
+        $this->output->{$options[$result]}($message);
     }
 }
