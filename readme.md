@@ -1,60 +1,57 @@
-# FlashBang
-### A simple library to assist with flashing alert messages to users of your Laravel applications. 
-Display context specific messages to your users that will be displayed once then never shown again.
+# Pendulum
+### A framework agnostic library for importing data into your PHP applications 
+Pendulum allows you to import data into your application from files, APIs, data stores, or any other source you want to pull information from. 
+Simply specify a data source and provide a function specifying how to import your data into your specific aplication and Pendulum will handle the rest!
 
-In addition to creating flash messages, this library allows you to write to the Laravel log file to allow you to keep track of what has been shown to the user
-#### Installation 
+Pendulum uses [PHP Iterators](http://php.net/manual/en/class.iterator.php) as data sources meaning it will work out of the box with any [PHP Standard Library Iterator](http://php.net/manual/en/spl.iterators.php) or any data source that implements the Iterator Interface. In the majority of use cases, a data source will already exist meaning all the code you need to provide is a small function explaining how to import this data into your specific application.
 
-    composer require bytepath/flashbang
+Pendulum is framework agnostic, meaning it will work with any PHP 7 codebase, but if you are using this in Laravel or Symfony based applications, A pre made console application can be used to import data from the comfort of your command line or even a scheduled cron job. 
+
+### Installation 
+
+    composer require bytepath/pendulum
     
 The library should be automatically installed via the Laravel package auto-discovery feature. 
 
-#### Adding a Flash Message To The Session
+### Specifying Your Data Source
 
-To add a flash message to the session use the FlashBang facade included in this package.
+Pendulum uses [PHP Iterators](http://php.net/manual/en/class.iterator.php) as data sources meaning it can import data using any [PHP Standard Library Iterator](http://php.net/manual/en/spl.iterators.php) or any custom object that implements the Iterator Interface. 
+
+Making an Iterator sound like too much work? Pendulum also supports [PHP Generators](http://php.net/manual/en/language.generators.overview.php). You can also simply pass pendulum a php array, though in that case this library might be overkill for your needs.
+
+### Specifying Your Import Class
+
+Pendulum accepts any object or class that implements the Pendulum ImporterInterface class. The Interface, listed in its entirety below, has one method, processItem, that specifies how to import data into your application.
+
+Success, Failure, and Duplicates are all application specific information, so the processItem method expects the return value to be one of the constants listed in the interface below. This return value lets Pendulum know whether your application was able to import this item. 
+
+    interface ImporterContract
+    {
+        // Successfully imported item
+        const IMPORT_SUCCESS = 1;
     
-    use Bytepath\FlashBang\Facades\FlashBang;
-
-You can now send a message to the user of your application using one of the methods listed below
-   
-    /**
-     * The requested action was successfully completed
-     * @param $message The message to display to the user
-     * @param $logMessage an optional message to add to the laravel log file
-     */
-        FlashBang::success($message, $logMessage = null);
-     
-    /**
-     * The requested action failed to complete
-     * @param $message The message to display to the user
-     * @param $logMessage an optional message to add to the laravel log file
-     */
-        FlashBang::failure($message); 
         
-    /**
-     * Display an informational message to the user
-     * @param $message The message to display to the user
-     * @param $logMessage an optional message to add to the laravel log file
-     */
-        FlashBang::info($message);    
-        
-    /**
-     * Display a warning message to the user
-     * @param $message The message to display to the user
-     * @param $logMessage an optional message to add to the laravel log file
-     */
-        FlashBang::warning($message); 
-        
-#### Adding Flash Message To Views
-
-To add a FlashBang message to your view, simply add the following snippet 
-
-    @include("flashbang::messages")
-to whatever view you wish to display these messages on. Messages can be displayed multiple times on the same page if for
-whatever reason you wanted to do that.
-
-By default this sub view will also show Form validation errors (and any other session errors).
-If you don't want this add $hideSessionErrors = true to the include directive
+        // Failed to import item
+        const IMPORT_FAILED = -1;
     
-    @include("flashbang::messages", ["hideSessionErrors" => true])
- 
+        
+        // Item was already imported
+        const ALREADY_IMPORTED = 0;
+        
+        /**
+         * Import a single piece of data into your application
+         * Returns one of the following constants 
+         * ImporterContract::IMPORT_SUCCESS -- We imported the data sucessfully
+         * ImporterContract::IMPORT_FAILED -- We failed to import this item
+         * ImporterContract::ALREADY_IMPORTED -- This is a duplicate item
+         * 
+         * @param PendulumContract $item The item you want to import into the system
+         * @return integer returns one of the constants listed in the ImporterContract Interface
+         */
+        public function processItem(&$item);
+    }
+    
+
+### Instantiating And Using Pendulum In Your Applications
+
+Your data source and data importer do not need to be discrete objects. Pendulum gives you the option to specify a  class that implements both the Pendulum ImporterContract and the PHP Iterator Interface, or two different objects that each implement one of these interfaces. 

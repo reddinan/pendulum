@@ -1,9 +1,6 @@
 <?php
 namespace Bytepath\Pendulum\Contracts;
 
-use Bytepath\Pendulum\Contracts\PendulumContract;
-use Illuminate\Support\Collection;
-
 interface ImporterContract
 {
     // Successfully imported item
@@ -16,9 +13,14 @@ interface ImporterContract
     const ALREADY_IMPORTED = 0;
 
     /**
-     * Import an item into the system
+     * Import a single piece of data into your application
+     * Returns one of the following constants
+     * ImporterContract::IMPORT_SUCCESS -- We imported the data sucessfully
+     * ImporterContract::IMPORT_FAILED -- We failed to import this item
+     * ImporterContract::ALREADY_IMPORTED -- This is a duplicate item
+     *
      * @param PendulumContract $item The item you want to import into the system
-     * @return integer 1=success, 0=duplicate, -1=failed
+     * @return integer returns one of the constants listed in the ImporterContract Interface
      */
     public function processItem(&$item);
 }
