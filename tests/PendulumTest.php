@@ -18,6 +18,40 @@ class PendulumTest extends \Bytepath\Pendulum\Tests\TestCase
         $pendulum->import();
     }
 
+    public function test_can_use_php_array_as_repository()
+    {
+        $array = [
+            new SampleImportable("cats"),
+            new SampleImportable("dogs"),
+            new SampleImportable("pigs")
+        ];
+
+        $importer = $this->getMockImporter(ImporterContract::IMPORT_SUCCESS, 3);
+        $output = $this->getMockOutputWriter();
+        $output->shouldReceive("success")->times(3);
+
+        $pendulum = new Pendulum($importer, $array);
+        $pendulum->setOutputWriter($output);
+        $pendulum->import();
+    }
+
+    public function test_can_use_php_generator_as_repository()
+    {
+        $generator = function(Array $items){
+            foreach($items as $item){
+                yield new SampleImportable($item);
+            }
+        };
+
+        $importer = $this->getMockImporter(ImporterContract::IMPORT_SUCCESS, 4);
+        $output = $this->getMockOutputWriter();
+        $output->shouldReceive("success")->times(4);
+
+        $pendulum = new Pendulum($importer, $generator(['cats', 'dogs', 'pigs', 'rats']));
+        $pendulum->setOutputWriter($output);
+        $pendulum->import();
+    }
+
     public function test_output_success_is_called_if_imported_successfully()
     {
         $importer = $this->getMockImporter(ImporterContract::IMPORT_SUCCESS);

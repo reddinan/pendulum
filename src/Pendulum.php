@@ -79,16 +79,25 @@ class Pendulum
     protected function setRepositoryAndImporter($importerAndRepository)
     {
         foreach($importerAndRepository as $theObject){
-            $implements = class_implements($theObject);
-
-            // Check if this class is the importer
-            if(array_key_exists(ImporterContract::class, $implements)){
-                $this->importer = $theObject;
+            // Importer can be passed a normal array. If this happens wrap it in an iterator and use it as repository
+            if(is_array($theObject)){
+                $this->repository = new \ArrayIterator($theObject);
             }
+            // Check the object to see what interfaces it implements. If this class implements ImporterContract,
+            // use it as the importer. If it implements Iterator, use it as repository. The same class can be
+            // used as both the importer and repository if it implements both interfaces
+            else {
+                $implements = class_implements($theObject);
 
-            // Check if this class is the repository
-            if(array_key_exists(\Iterator::class, $implements)){
-                $this->repository = $theObject;
+                // Check if this class is the importer
+                if (array_key_exists(ImporterContract::class, $implements)) {
+                    $this->importer = $theObject;
+                }
+
+                // Check if this class is the repository
+                if (array_key_exists(\Iterator::class, $implements)) {
+                    $this->repository = $theObject;
+                }
             }
         }
     }
