@@ -1,5 +1,5 @@
 <?php
-namespace Bytepath\FlashBang\Facades;
+namespace Bytepath\Pendulum\Facades;
 
 use Bytepath\Pendulum\Pendulum as ActualPendulum;
 use Illuminate\Support\Facades\Facade;

@@ -23,68 +23,104 @@ class PendulumTest extends \Bytepath\Pendulum\Tests\TestCase
         $importer = $this->getMockImporter(ImporterContract::IMPORT_SUCCESS);
         $output = $this->getMockOutputWriter();
         $output->shouldReceive("success")->once();
+        $list = $this->createArrayIterator(["cats"]);
 
-        $pendulum = new Pendulum($importer, $this->createArrayIterator(["cats"]));
+        $pendulum = new Pendulum($importer, $list);
         $pendulum->setOutputWriter($output);
         $pendulum->import();
+
+        // The list item should have success set to true because we called the pendulumSuccess function
+        $this->assertTrue($list[0]->success);
     }
 
-    public function test_output_failure_is_called_if_imported_successfully()
+    public function test_output_failure_is_called_if_imported_fails()
     {
         $importer = $this->getMockImporter(ImporterContract::IMPORT_FAILED);
         $output = $this->getMockOutputWriter();
         $output->shouldReceive("failure")->once();
+        $list = $this->createArrayIterator(["cats"]);
 
-        $pendulum = new Pendulum($importer, $this->createArrayIterator(["cats"]));
+        $pendulum = new Pendulum($importer, $list);
         $pendulum->setOutputWriter($output);
         $pendulum->import();
+
+        // The list item should have success set to true because we called the pendulumSuccess function
+        $this->assertTrue($list[0]->failure);
     }
 
-    public function test_output_duplicate_is_called_if_imported_successfully()
+    public function test_output_duplicate_is_called_if_already_imported()
     {
         $importer = $this->getMockImporter(ImporterContract::ALREADY_IMPORTED);
         $output = $this->getMockOutputWriter();
         $output->shouldReceive("duplicate")->once();
+        $list = $this->createArrayIterator(["cats"]);
 
-        $pendulum = new Pendulum($importer, $this->createArrayIterator(["cats"]));
+        $pendulum = new Pendulum($importer, $list);
         $pendulum->setOutputWriter($output);
         $pendulum->import();
+
+        // The list item should have duplicate set to true because we called the pendulumDuplicate function
+        $this->assertTrue($list[0]->duplicate);
     }
 
-    public function test_pendulumSuccess_is_called_on_the_importable_item_if_successfully_imported()
-    {
-        $this->assertTrue(false);
-    }
-
+    /**
+     * NoContractImportable does not have success, failure and duplicate functions, so this will fail if
+     * pendulum called these functions.
+     */
     public function test_pendulumSuccess_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
     {
-        $this->assertTrue(false);
+        $importer = $this->getMockImporter(ImporterContract::IMPORT_SUCCESS);
+        $list = $this->noContractArrayIterator(["cats"]);
+        $pendulum = new Pendulum($importer, $list);
+        $pendulum->import();
+
+        // The list item should have success set to true because we called the pendulumSuccess function
+        $this->assertFalse($list[0]->success);
     }
 
-    public function test_pendulumFailure_is_called_on_the_importable_item_if_import_failed()
-    {
-        $this->assertTrue(false);
-    }
-
+    /**
+     * NoContractImportable does not have success, failure and duplicate functions, so this will fail if
+     * pendulum called these functions.
+     */
     public function test_pendulumFailure_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
     {
-        $this->assertTrue(false);
+        $importer = $this->getMockImporter(ImporterContract::IMPORT_FAILED);
+        $list = $this->noContractArrayIterator(["cats"]);
+        $pendulum = new Pendulum($importer, $list);
+        $pendulum->import();
+
+        // The list item should have success set to true because we called the pendulumSuccess function
+        $this->assertFalse($list[0]->failure);
     }
 
-    public function test_pendulumDuplicate_is_called_on_the_importable_item_if_item_was_a_duplicate()
-    {
-        $this->assertTrue(false);
-    }
-
+    /**
+     * NoContractImportable does not have success, failure and duplicate functions, so this will fail if
+     * pendulum called these functions.
+     */
     public function test_pendulumDuplicate_is_not_called_if_the_importable_item_doesnt_implement_pendulum_contract()
     {
-        $this->assertTrue(false);
+        $importer = $this->getMockImporter(ImporterContract::ALREADY_IMPORTED);
+        $list = $this->noContractArrayIterator(["cats"]);
+        $pendulum = new Pendulum($importer, $list);
+        $pendulum->import();
+
+        // The list item should have success set to true because we called the pendulumSuccess function
+        $this->assertFalse($list[0]->duplicate);
     }
-    
+
     protected function createArrayIterator($array)
     {
         foreach($array as $key => $item) {
             $array[$key] = new SampleImportable($item);
+        }
+
+        return new \ArrayIterator($array);
+    }
+
+    protected function noContractArrayIterator($array)
+    {
+        foreach($array as $key => $item) {
+            $array[$key] = new NonContractImportable($item);
         }
 
         return new \ArrayIterator($array);
@@ -111,7 +147,7 @@ class SampleImportable implements PendulumContract
     public $data = null;
     public $success = false;
     public $duplicate = false;
-    public $failed = false;
+    public $failure = false;
 
     public function __construct($data)
     {
@@ -125,16 +161,35 @@ class SampleImportable implements PendulumContract
     }
 
 
-    public function pendulumFailed()
+    public function pendulumFailure()
     {
-        $this->success = true;
+        $this->failure = true;
         return "FAILED " . $this->data;
     }
 
 
     public function pendulumDuplicate()
     {
-        $this->success = true;
+        $this->duplicate = true;
         return "DUPLICATE " . $this->data;
+    }
+}
+
+class NonContractImportable
+{
+    public $data = null;
+    public $success = false;
+    public $duplicate = false;
+    public $failure = false;
+
+    public function __construct($data)
+    {
+        $this->data = $data;
+    }
+
+    public function __call($name, $arguments)
+    {
+        // if success, duplicate, or failed are called this will set them to true
+        $this->{str_replace("pendulum", "", $name)} = true;
     }
 }

@@ -2,8 +2,6 @@
 
 namespace Bytepath\Pendulum\Tests;
 
-use Bytepath\FlashBang\Facades\FlashBang;
-use Bytepath\FlashBang\FlashBangServiceProvider;
 use Bytepath\Pendulum\Pendulum;
 use Bytepath\Pendulum\PendulumServiceProvider;
 use Illuminate\Support\Collection;
@@ -15,7 +13,7 @@ class TestCase extends OrchestraTestCase
     /**
      * Load package service provider
      * @param  \Illuminate\Foundation\Application $app
-     * @return FlashBangServiceProvider
+     * @return Array
      */
     protected function getPackageProviders($app)
     {

@@ -1,7 +1,6 @@
 <?php
 namespace Bytepath\Pendulum;
 
-use Bytepath\FlashBang\Flasher;
 use Illuminate\Log\Logger;
 use Illuminate\Session\SessionManager;
 use Illuminate\Support\ServiceProvider;

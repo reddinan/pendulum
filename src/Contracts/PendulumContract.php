@@ -13,7 +13,7 @@ interface PendulumContract
      * Called if the importable item failed to import
      * @return string An information message that will be passed on to the user
      */
-    public function pendulumFailed();
+    public function pendulumFailure();
 
     /**
      * Called if the importable item was already imported
