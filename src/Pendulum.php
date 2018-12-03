@@ -4,7 +4,6 @@ namespace Bytepath\Pendulum;
 use Bytepath\Pendulum\Contracts\ImporterContract;
 use Bytepath\Pendulum\Contracts\OutputContract;
 use Bytepath\Pendulum\Contracts\PendulumContract;
-use Bytepath\Pendulum\Contracts\RepositoryContract;
 
 class Pendulum
 {
@@ -16,7 +15,7 @@ class Pendulum
 
     /**
      * The repository that interacts with the data store
-     * @var RepositoryContract
+     * @var \Iterator
      */
     protected $repository = null;
 
@@ -56,8 +55,11 @@ class Pendulum
 
     /**
      * Requires you to pass in one or more classes. Read full description
-     * This constructor requires you to pass in objects that implement Bytepath\Pendulum\Contracts\ImporterContract and
-     * Bytepath\Pendulum\Contracts\RepositoryContract. You can pass in one object that implements both of these
+     * This constructor requires you to pass in 1 or more objects that implement
+     * Bytepath\Pendulum\Contracts\ImporterContract
+     * \Iterator
+     * (optional) Bytepath\Pendulum\Contracts\OutputContract
+     * You can pass in one object that implements both of these
      * contracts, or two different objects each implement one of these contracts. If you pass in two (or more)
      * objects that both implement the same interface, the last one will be the one that this class will use.
      *
@@ -70,6 +72,17 @@ class Pendulum
 
         //Import the repository and importer that are passed in. This can be one class or multiple
         $this->setRepositoryAndImporter($importerAndRepository);
+    }
+
+    /**
+     * Unset all dependencies to prevent memory leaks
+     */
+    public function __destruct()
+    {
+        //Unset all of the dependencies just in case we cause a memory leak
+        unset($this->importer);
+        unset($this->repository);
+        unset($this->output);
     }
 
     /**
@@ -98,6 +111,11 @@ class Pendulum
                 if (array_key_exists(\Iterator::class, $implements)) {
                     $this->repository = $theObject;
                 }
+
+                // Check if this class is the output writer
+                if (array_key_exists(OutputContract::class, $implements)) {
+                    $this->output = $theObject;
+                }
             }
         }
     }
@@ -123,7 +141,7 @@ class Pendulum
     }
 
     /**
-     * @return RepositoryContract
+     * @return \Iterator
      */
     public function getRepository()
     {
