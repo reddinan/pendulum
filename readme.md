@@ -52,6 +52,14 @@ Success, Failure, and Duplicates are all application specific information, so th
     }
     
 
+### Specifying Output Writer
+Pendulum can output information about the current import to the user by providing a class that implements the Pendulum OutputContract Interface. Simply implement this interface in an object of your choice and pass this object as a dependency when instantiating the base Pendulum class. See "Instantiating And Using Pendulum In Your Applications" for more information. If no class that implements the Pendulum OutputContract is provided, NullOutputWriter will be used by default and will essentially throw away any output intended for the user.
+
 ### Instantiating And Using Pendulum In Your Applications
 
-Your data source and data importer do not need to be discrete objects. Pendulum gives you the option to specify a  class that implements both the Pendulum ImporterContract and the PHP Iterator Interface, or two different objects that each implement one of these interfaces. 
+When instantiating Pendulum, we need to specify 
++ A class implementing the [PHP Iterator](http://php.net/manual/en/class.iterator.php) Interface that will be used as a data source to pull data we wish to import into our application
++ A data import class that implements the Pendulum ImporterContract interface. will save the data we want to import into our application
++ (Optional) an output writer writer class implementing the Pendulum OutputWriter interface that will display data to the end user.
+ 
+These interfaces can either be implemented by a single "mega class", or split apart into multiple classes as necessary. The Pendulum constructor accepts any number of arguments so you can split apart Interfaces as needed as long as you are supplying objects that implement the interfaces mentioned above. 

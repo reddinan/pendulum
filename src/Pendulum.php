@@ -185,6 +185,11 @@ class Pendulum
         $this->itemProcessed($result, $item);
     }
 
+    /**
+     * Called after an item has been processed
+     * @param mixed $result indicates success,failure,duplicate,etc
+     * @param mixed $item the item that was imported
+     */
     protected function itemProcessed($result, $item)
     {
         // Failed is a negative number so we add one to avoid any issues there
