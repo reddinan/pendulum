@@ -1,6 +1,6 @@
 {
-    "name": "bytepath/flashbang",
-    "description": "A library to send flash notifications to the user of your web app",
+    "name": "bytepath/pendulum",
+    "description": "A framework agnostic library for importing data into your PHP applications",
     "type": "library",
     "require": {
         "illuminate/support": "^5.5",

@@ -63,3 +63,5 @@ When instantiating Pendulum, we need to specify
 + (Optional) an output writer writer class implementing the Pendulum OutputWriter interface that will display data to the end user.
  
 These interfaces can either be implemented by a single "mega class", or split apart into multiple classes as necessary. The Pendulum constructor accepts any number of arguments so you can split apart Interfaces as needed as long as you are supplying objects that implement the interfaces mentioned above. 
+
+
